@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px" >
+
+        <div>
+
+            <fieldset>
+                <h1>Login</h1>
+                
+                <label for="username">Username</label>
+                <input type="text" id="username" />
+                <button id="login">login</button>
+            </fieldset>
+            
+            <fieldset>
+                <label for="friend">Friend</label>
+                <input type="text" id="friend" />
+        
+            </fieldset>
+        </div>
+
+        <fieldset>
+            <label for="message">Message</label>
+            <input type="text" id="message" />
+            <button id="send">send</button>
+    
+
+
+            <ul id="messages"></ul>
+    
+        </fieldset>
+    </div>
+    
+   
+
+
+   
+   
+
+    <script type="module">
+        import { io } from "https://cdn.socket.io/4.4.1/socket.io.esm.min.js";
+      
+        const socket = io("http://localhost:9000")
+
+        const login = document.querySelector("#login")
+        const message = document.querySelector("#message")
+        const send = document.querySelector("#send")
+        const messages = document.querySelector("#messages")
+        
+
+        socket.on('HE_IS_TYPING', () => {
+            const typing = document.querySelector("#typing")
+
+            console.log(typing)
+            if (!typing) {
+
+                const friend = document.querySelector("#friend")
+                messages.innerHTML += `<li id="typing" >${friend.value}: ...(typing)</li>`
+            }
+        })
+
+        socket.on('HE_IS_NOT_TYPING', () => {
+            const typing = document.querySelector("#typing")
+            typing.remove()
+        })
+
+        message.addEventListener('input', () => {
+            const friend = document.querySelector("#friend").value
+            socket.emit('TYPING', {
+                friend
+            })
+        })
+
+        message.addEventListener('blur', () => {
+            const friend = document.querySelector("#friend").value
+            socket.emit('BLUR', {
+                friend
+            })
+        })
+        
+        login.addEventListener("click", () => {
+            const username = document.querySelector("#username")
+            socket.emit("LOGIN", username.value)
+        })
+        
+        send.addEventListener("click", () => {
+            const message = document.querySelector("#message")
+            const friend = document.querySelector("#friend")
+            const username = document.querySelector("#username")
+            messages.innerHTML += `<li>${username.value}: ${message.value}</li>`
+
+            socket.emit("SEND_MESSAGE", {
+                message: message.value,
+                friend: friend.value
+            })
+        })
+
+        socket.on("RECIEVE_MESSAGE", (data) => {
+            const friend = document.querySelector("#friend")
+            messages.innerHTML += `<li>${friend.value}: ${data}</li>`
+        })
+
+
+      </script>
+
+</body>
+</html>
